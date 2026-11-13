@@ -1,31 +1,23 @@
 # Apply ONCE, AFTER argocd/appproject.yaml (then ArgoCD manages everything from git):
 #   kubectl apply -n argocd -f argocd/application.yaml
+# Or in the ArgoCD UI: project backstage · repo this repo · revision main · path apps/prod ·
+# cluster in-cluster · namespace prod-backstage (ArgoCD detects the Helm chart by itself).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: backstage
+  name: backstage-prod
   namespace: argocd
 spec:
   project: backstage            # argocd/appproject.yaml — only namespace prod-backstage, only these repos
+  source:
+    repoURL: https://github.com/Everesto-Inc/gitops-backstage.git
+    targetRevision: main
+    path: apps/prod             # wrapper chart: official Backstage chart + values + ExternalSecret
+    helm:
+      releaseName: backstage    # keeps resource names "backstage" (Deployment, Service)
   destination:
     server: https://kubernetes.default.svc
     namespace: prod-backstage
-  sources:
-    # 1. the official chart, pinned
-    - repoURL: https://backstage.github.io/charts
-      chart: backstage
-      targetRevision: 2.10.2
-      helm:
-        releaseName: backstage
-        valueFiles: [$values/values.yaml]
-    # 2. this repo, as the source of values.yaml
-    - repoURL: https://github.com/Everesto-Inc/gitops-backstage.git
-      targetRevision: main
-      ref: values
-    # 3. this repo's extra manifests (secret sync from Infisical)
-    - repoURL: https://github.com/Everesto-Inc/gitops-backstage.git
-      targetRevision: main
-      path: manifests
   syncPolicy:
     automated: { prune: true, selfHeal: true }
     syncOptions: [CreateNamespace=true]

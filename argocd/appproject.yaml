@@ -14,8 +14,8 @@ spec:
   description: Backstage developer portal (prod) — https://backstage.everesto.live
   # Where manifests may come FROM
   sourceRepos:
-    - https://backstage.github.io/charts                     # official Helm chart
-    - https://github.com/Everesto-Inc/gitops-backstage.git   # values.yaml + manifests/
+    - https://github.com/Everesto-Inc/gitops-backstage.git   # apps/<env>/ (wrapper chart)
+    - https://backstage.github.io/charts                     # official chart, pulled as a dependency
   # Where they may be deployed TO
   destinations:
     - server: https://kubernetes.default.svc
