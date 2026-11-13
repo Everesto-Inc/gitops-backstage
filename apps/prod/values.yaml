@@ -20,7 +20,7 @@ backstage:
       - name: POSTGRES_USER
         value: backstage
     # From Infisical via ESO (templates/external-secret.yaml):
-    # POSTGRES_HOST · POSTGRES_PASSWORD · AUTH_GITHUB_CLIENT_ID · AUTH_GITHUB_CLIENT_SECRET · POSTGRES_CA
+    # POSTGRES_HOST · POSTGRES_PASSWORD · AUTH_GITHUB_CLIENT_ID · AUTH_GITHUB_CLIENT_SECRET · POSTGRES_CA · GITHUB_TOKEN
     extraEnvVarsSecrets: [backstage-secrets]
 
     # Mount the Postgres CA cert (POSTGRES_CA key in backstage-secrets) as a file so
