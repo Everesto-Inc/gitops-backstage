@@ -3,7 +3,7 @@
 #   kubectl apply -n argocd -f argocd/appproject.yaml
 #
 # Guard rails: a mistake (or a compromised commit) in this repo can only touch namespace
-# "backstage", only from the sources below, and can't create cluster-wide objects
+# "prod-backstage", only from the sources below, and can't create cluster-wide objects
 # (ClusterRoles, CRDs, webhooks…) except the namespace itself.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -19,12 +19,12 @@ spec:
   # Where they may be deployed TO
   destinations:
     - server: https://kubernetes.default.svc
-      namespace: backstage
+      namespace: prod-backstage
   # Cluster-scoped objects: only the namespace (needed by CreateNamespace=true)
   clusterResourceWhitelist:
     - group: ''
       kind: Namespace
-  # Namespaced objects: everything, but only inside "backstage" (see destinations)
+  # Namespaced objects: everything, but only inside "prod-backstage" (see destinations)
   namespaceResourceWhitelist:
     - group: '*'
       kind: '*'

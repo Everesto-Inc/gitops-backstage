@@ -6,10 +6,10 @@ metadata:
   name: backstage
   namespace: argocd
 spec:
-  project: backstage            # argocd/appproject.yaml — only namespace backstage, only these repos
+  project: backstage            # argocd/appproject.yaml — only namespace prod-backstage, only these repos
   destination:
     server: https://kubernetes.default.svc
-    namespace: backstage
+    namespace: prod-backstage
   sources:
     # 1. the official chart, pinned
     - repoURL: https://backstage.github.io/charts

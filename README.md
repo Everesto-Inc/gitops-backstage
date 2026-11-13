@@ -8,6 +8,9 @@ backstage-app (code) ──CI──▶ ghcr.io/everesto-inc/backstage:sha-xxxxxx
 ArgoCD ◀────────────────────────────────────────────────────────────────────────────┘
   ├─ official Helm chart backstage 2.10.2 + values.yaml   → Deployment + Service (NodePort 30700)
   └─ manifests/external-secret.yaml                       → secret "backstage-secrets" from Infisical
+     (all in namespace prod-backstage)
+
+ESO ── ClusterSecretStore infisical-backstage (platform/) ── login in ns external-secrets ──▶ Infisical
 
 Backstage ──SSL──▶ PostgreSQL on the GCP VM (database + user "backstage", one schema per plugin)
 ```
@@ -16,7 +19,8 @@ Backstage ──SSL──▶ PostgreSQL on the GCP VM (database + user "backstag
 |---|---|
 | `values.yaml` | our settings for the official chart (image, env, resources, placement, NodePort) |
 | `manifests/external-secret.yaml` | ESO: copies 5 keys from Infisical into `backstage-secrets` |
-| `argocd/appproject.yaml` | ArgoCD project `backstage`: only namespace `backstage`, only this repo + the chart — applied once by hand |
+| `platform/cluster-secret-store.yaml` | ClusterSecretStore `infisical-backstage`, usable only by ns `prod-backstage` — applied once by hand |
+| `argocd/appproject.yaml` | ArgoCD project `backstage`: only namespace `prod-backstage`, only this repo + the chart — applied once by hand |
 | `argocd/application.yaml` | the ArgoCD Application — applied once by hand |
 
 ## This repo is public — rules
@@ -44,28 +48,29 @@ The owner may create schemas → Backstage makes one per plugin inside `backstag
 - Project **`backstage`** → environment **`prod`** → root `/` with:
   `POSTGRES_HOST` (the DB's DNS name — must match the cert's CN/SAN) · `POSTGRES_PASSWORD` · `AUTH_GITHUB_CLIENT_ID` ·
   `AUTH_GITHUB_CLIENT_SECRET` · `POSTGRES_CA` (full PEM of the DB server cert, public part only)
-- Put the project's **slug** (Settings) into `manifests/external-secret.yaml` → `projectSlug`
+- Put the project's **slug** (Settings) into `platform/cluster-secret-store.yaml` → `projectSlug`
 - Organization → Access Control → **Identities** → create `k8s-eso` (Universal Auth) →
   add it to project `backstage` with role **Viewer** (read only) → copy **Client ID / Client Secret**
 
 **4. Cluster** (on control-plane) — the only secrets ever typed by hand:
 ```bash
-kubectl create namespace backstage
-# Infisical machine identity → lets ESO read the backstage project
-kubectl -n backstage create secret generic infisical-universal-auth \
+# Infisical login → platform namespace, NOT the app namespace (app users can't read it)
+kubectl -n external-secrets create secret generic infisical-backstage-auth \
   --from-literal=clientId='<client id>' --from-literal=clientSecret='<client secret>'
-# ghcr.io pull secret (same as the portfolio)
-kubectl -n backstage create secret docker-registry ghcr-secret \
-  --docker-server=ghcr.io --docker-username=Jacer7 --docker-password='<PAT with read:packages>'
-# ESO version must support the Infisical provider:
-kubectl get crd secretstores.external-secrets.io -o yaml | grep -c infisical   # > 0
+kubectl apply -f platform/cluster-secret-store.yaml
+kubectl get clustersecretstore infisical-backstage          # STATUS Valid
+
+# App namespace + ghcr.io pull secret (pull secrets must live next to the pod)
+kubectl create namespace prod-backstage
+kubectl -n prod-backstage create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io --docker-username=Jacer7 --docker-password='<classic PAT, read:packages>'
 ```
 
 **5. CI secret** — `backstage-app` repo → Settings → Secrets → Actions → `GITOPS_PAT`.
 
 **6. ArgoCD** — project first, then the app:
 `kubectl apply -n argocd -f argocd/appproject.yaml` · `kubectl apply -n argocd -f argocd/application.yaml`, then check:
-`kubectl -n backstage get externalsecret` → `SecretSynced` and `backstage-secrets` exists.
+`kubectl -n prod-backstage get externalsecret` → `SecretSynced` and `backstage-secrets` exists.
 
 **7. Route + DNS** — ansible repo `files/traefik/conf.d/backstage.yml` → AWX
 **sync_traefik_routes**; Cloudflare record `backstage` (proxied).
