@@ -6,7 +6,7 @@ backstage:
     image:
       registry: ghcr.io
       repository: everesto-inc/backstage
-      tag: "sha-9179a30"
+      tag: "sha-202fdae"
       pullPolicy: IfNotPresent
       pullSecrets: [ghcr-secret] # ghcr.io package is private → secret created by hand (README)
 
