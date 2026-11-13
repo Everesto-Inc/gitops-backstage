@@ -1,0 +1,70 @@
+# Values for the official Backstage Helm chart (https://backstage.github.io/charts), version pinned
+# in argocd/application.yaml. Only what differs from the chart's defaults lives here.
+backstage:
+  image:
+    registry: ghcr.io
+    repository: everesto-inc/backstage
+    tag: "latest"              # bumped to sha-xxxxxxx by backstage-app CI on every push
+    pullSecrets: [ghcr-secret] # ghcr.io package is private → secret created by hand (README)
+
+  args: ["--config", "app-config.yaml", "--config", "app-config.production.yaml"]
+
+  # Database = the existing PostgreSQL on the GCP VM (database + user "backstage").
+  # Not secret → here. Host + password → secret below.
+  extraEnvVars:
+    - name: POSTGRES_PORT
+      value: "5432"
+    - name: POSTGRES_USER
+      value: backstage
+  # From Infisical via ESO (manifests/external-secret.yaml):
+  # POSTGRES_HOST · POSTGRES_PASSWORD · AUTH_GITHUB_CLIENT_ID · AUTH_GITHUB_CLIENT_SECRET · POSTGRES_CA
+  extraEnvVarsSecrets: [backstage-secrets]
+
+  # Mount the Postgres CA cert (POSTGRES_CA key in backstage-secrets) as a file so
+  # app-config.production.yaml can verify the DB server cert (ssl.rejectUnauthorized: true).
+  # DEPLOY ORDER: POSTGRES_CA must exist in Infisical BEFORE this syncs, or the pod
+  # fails to mount the key. See manifests/external-secret.yaml.
+  extraVolumes:
+    - name: postgres-ca
+      secret:
+        secretName: backstage-secrets
+        items:
+          - key: POSTGRES_CA
+            path: ca.crt
+  extraVolumeMounts:
+    - name: postgres-ca
+      mountPath: /etc/backstage/postgres
+      readOnly: true
+
+  # Small reservation, room to burst: requests decide placement, no CPU limit = may use all free CPU
+  resources:
+    requests: { cpu: 250m, memory: 768Mi }
+    limits: { memory: 1536Mi }
+
+  # Prefer the argocd node (platform tools); fall back to control-plane if it is full or down
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values: [dev-k3s-argocd]
+
+  # Backstage needs 1–2 min to start on 1 CPU — give it 5 min before the first health check fails
+  startupProbe:
+    httpGet:
+      path: /.backstage/health/v1/liveness
+      port: 7007
+    periodSeconds: 10
+    failureThreshold: 30
+
+# Reached by Traefik on alb: files/traefik/conf.d/backstage.yml → any node :30700
+service:
+  type: NodePort
+  nodePorts:
+    backend: 30700
+
+postgresql:
+  enabled: false
