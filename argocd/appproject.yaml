@@ -1,0 +1,30 @@
+# ArgoCD project "backstage" — limits what the backstage Application may deploy.
+# Apply ONCE by hand, BEFORE argocd/application.yaml:
+#   kubectl apply -n argocd -f argocd/appproject.yaml
+#
+# Guard rails: a mistake (or a compromised commit) in this repo can only touch namespace
+# "backstage", only from the sources below, and can't create cluster-wide objects
+# (ClusterRoles, CRDs, webhooks…) except the namespace itself.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: backstage
+  namespace: argocd
+spec:
+  description: Backstage developer portal (prod) — https://backstage.everesto.live
+  # Where manifests may come FROM
+  sourceRepos:
+    - https://backstage.github.io/charts                     # official Helm chart
+    - https://github.com/Everesto-Inc/gitops-backstage.git   # values.yaml + manifests/
+  # Where they may be deployed TO
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: backstage
+  # Cluster-scoped objects: only the namespace (needed by CreateNamespace=true)
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+  # Namespaced objects: everything, but only inside "backstage" (see destinations)
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

@@ -16,6 +16,7 @@ Backstage ──SSL──▶ PostgreSQL on the GCP VM (database + user "backstag
 |---|---|
 | `values.yaml` | our settings for the official chart (image, env, resources, placement, NodePort) |
 | `manifests/external-secret.yaml` | ESO: copies 5 keys from Infisical into `backstage-secrets` |
+| `argocd/appproject.yaml` | ArgoCD project `backstage`: only namespace `backstage`, only this repo + the chart — applied once by hand |
 | `argocd/application.yaml` | the ArgoCD Application — applied once by hand |
 
 ## This repo is public — rules
@@ -62,7 +63,8 @@ kubectl get crd secretstores.external-secrets.io -o yaml | grep -c infisical   #
 
 **5. CI secret** — `backstage-app` repo → Settings → Secrets → Actions → `GITOPS_PAT`.
 
-**6. ArgoCD** — `kubectl apply -n argocd -f argocd/application.yaml`, then check:
+**6. ArgoCD** — project first, then the app:
+`kubectl apply -n argocd -f argocd/appproject.yaml` · `kubectl apply -n argocd -f argocd/application.yaml`, then check:
 `kubectl -n backstage get externalsecret` → `SecretSynced` and `backstage-secrets` exists.
 
 **7. Route + DNS** — ansible repo `files/traefik/conf.d/backstage.yml` → AWX

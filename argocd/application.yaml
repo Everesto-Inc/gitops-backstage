@@ -1,4 +1,4 @@
-# Apply ONCE (then ArgoCD manages everything from git):
+# Apply ONCE, AFTER argocd/appproject.yaml (then ArgoCD manages everything from git):
 #   kubectl apply -n argocd -f argocd/application.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -6,7 +6,7 @@ metadata:
   name: backstage
   namespace: argocd
 spec:
-  project: default
+  project: backstage            # argocd/appproject.yaml — only namespace backstage, only these repos
   destination:
     server: https://kubernetes.default.svc
     namespace: backstage
