@@ -4,7 +4,7 @@ backstage:
   image:
     registry: ghcr.io
     repository: everesto-inc/backstage
-    tag: "latest"              # bumped to sha-xxxxxxx by backstage-app CI on every push
+    tag: "sha-9179a30"
     pullSecrets: [ghcr-secret] # ghcr.io package is private → secret created by hand (README)
 
   args: ["--config", "app-config.yaml", "--config", "app-config.production.yaml"]
