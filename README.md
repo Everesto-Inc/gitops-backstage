@@ -24,7 +24,7 @@ change `values.yaml`, add an Application `backstage-dev` → namespace `dev-back
 |---|---|
 | `apps/prod/Chart.yaml` | wrapper chart: pins the official Backstage chart as a dependency |
 | `apps/prod/values.yaml` | our settings for the official chart (image, env, resources, placement, NodePort) — under `backstage:` |
-| `apps/prod/templates/external-secret.yaml` | ESO: copies 10 keys from Infisical into `backstage-secrets` |
+| `apps/prod/templates/external-secret.yaml` | ESO: copies 11 keys from Infisical into `backstage-secrets` |
 | `platform/cluster-secret-store.yaml` | ClusterSecretStore `infisical-backstage`, usable only by ns `prod-backstage` — applied once by hand |
 | `argocd/appproject.yaml` | ArgoCD project `backstage`: only namespace `prod-backstage`, only this repo + the chart — applied once by hand |
 | `argocd/application.yaml` | ArgoCD Application `backstage-prod` (path `apps/prod`) — applied once by hand |
@@ -56,7 +56,8 @@ The owner may create schemas → Backstage makes one per plugin inside `backstag
   `AUTH_GITHUB_CLIENT_SECRET` · `POSTGRES_CA` (full PEM of the DB server cert, public part only) ·
   GitHub App (`yarn backstage-cli create-github-app Everesto-Inc`, values from the credentials file):
   `GITHUB_APP_ID` · `GITHUB_APP_CLIENT_ID` · `GITHUB_APP_CLIENT_SECRET` · `GITHUB_APP_PRIVATE_KEY` (full PEM) ·
-  `GITHUB_APP_WEBHOOK_SECRET`
+  `GITHUB_APP_WEBHOOK_SECRET` ·
+  `SONARQUBE_TOKEN` (SonarQube user `backstage-bot`, global perms Administer System + Create Projects)
 - Put the project's **slug** (Settings) into `platform/cluster-secret-store.yaml` → `projectSlug`
 - Organization → Access Control → **Identities** → create `k8s-eso` (Universal Auth) →
   add it to project `backstage` with role **Viewer** (read only) → copy **Client ID / Client Secret**
