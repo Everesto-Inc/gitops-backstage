@@ -8,7 +8,7 @@ backstage:
       repository: everesto-inc/backstage
       tag: "sha-5ea0e8a"
       pullPolicy: IfNotPresent
-      pullSecrets: [ghcr-secret] # ghcr.io package is private → secret created by hand (README)
+      # image is PUBLIC on ghcr.io → no pull secret needed
 
     args: ["--config", "app-config.yaml", "--config", "app-config.production.yaml"]
 

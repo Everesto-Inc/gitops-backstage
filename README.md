@@ -69,10 +69,8 @@ kubectl -n external-secrets create secret generic infisical-backstage-auth \
 kubectl apply -f platform/cluster-secret-store.yaml
 kubectl get clustersecretstore infisical-backstage          # STATUS Valid
 
-# App namespace + ghcr.io pull secret (pull secrets must live next to the pod)
+# App namespace (the image ghcr.io/everesto-inc/backstage is public → no pull secret)
 kubectl create namespace prod-backstage
-kubectl -n prod-backstage create secret docker-registry ghcr-secret \
-  --docker-server=ghcr.io --docker-username=Jacer7 --docker-password='<classic PAT, read:packages>'
 ```
 
 **5. CI secret** — `backstage-app` repo → Settings → Secrets → Actions → `GITOPS_PAT`.
