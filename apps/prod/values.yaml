@@ -39,6 +39,13 @@ backstage:
         mountPath: /etc/backstage/postgres
         readOnly: true
 
+    # Recreate (not RollingUpdate): stop the old pod BEFORE starting the new one.
+    # Two pods at once double the DB connections (~13 plugin pools × 3) and the shared
+    # Postgres on the GCP VM (also used by Infisical) runs out of slots → new pod fails.
+    # Cost: ~2 min downtime per deploy.
+    strategy:
+      type: Recreate
+
     # Small reservation, room to burst: requests decide placement, no CPU limit = may use all free CPU
     resources:
       requests: { cpu: 250m, memory: 768Mi }
