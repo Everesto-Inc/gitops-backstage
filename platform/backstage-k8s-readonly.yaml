@@ -1,44 +1,48 @@
-# Platform-managed (cluster-wide RBAC — NOT synced by the backstage ArgoCD app, its project forbids it).
+# Platform-managed (NOT synced by the backstage ArgoCD app — its project forbids cluster-wide objects).
 # Apply ONCE by hand:  sudo kubectl apply -f platform/backstage-k8s-readonly.yaml
 #
-# Backstage (ServiceAccount prod-backstage/backstage, created by the chart) may READ workloads in every
-# namespace for the Kubernetes tab, and READ ArgoCD Applications for the Sync/Health status on CD cards.
-# No Secrets, no ConfigMaps, no writes, no exec.
+# Least privilege for Backstage (ServiceAccount prod-backstage/backstage):
+#  - ClusterRole backstage-read = the READ rules only. It is NOT bound cluster-wide.
+#    Each tenant deployment binds it inside its own namespace (apps/<env>/rolebinding-backstage.yaml,
+#    synced by ArgoCD) → Backstage reads pods/logs/events ONLY in tenant namespaces (orchid-dev, …),
+#    never in kube-system, argocd, external-secrets, awx, monitoring, prod-backstage.
+#  - Role backstage-argocd-read in ns argocd: read ArgoCD Applications (Sync/Health on CD cards).
+#  - No Secrets, no ConfigMaps, no writes, no exec.
+# Revoke everything:  sudo kubectl delete -f platform/backstage-k8s-readonly.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: backstage-read
 rules:
   - apiGroups: ['']
-    resources: [pods, pods/log, services, events, namespaces, limitranges, resourcequotas, replicationcontrollers]
+    resources: [pods, pods/log, services, events]
     verbs: [get, list, watch]
   - apiGroups: [apps]
-    resources: [deployments, replicasets, statefulsets, daemonsets]
+    resources: [deployments, replicasets]
     verbs: [get, list, watch]
   - apiGroups: [batch]
     resources: [jobs, cronjobs]
     verbs: [get, list, watch]
-  - apiGroups: [networking.k8s.io]
-    resources: [ingresses]
-    verbs: [get, list, watch]
-  - apiGroups: [autoscaling]
-    resources: [horizontalpodautoscalers]
-    verbs: [get, list, watch]
-  - apiGroups: [metrics.k8s.io]
-    resources: [pods]
-    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backstage-argocd-read
+  namespace: argocd
+rules:
   - apiGroups: [argoproj.io]
     resources: [applications]
     verbs: [get, list, watch]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
-  name: backstage-read
+  name: backstage-argocd-read
+  namespace: argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: backstage-read
+  kind: Role
+  name: backstage-argocd-read
 subjects:
   - kind: ServiceAccount
     name: backstage

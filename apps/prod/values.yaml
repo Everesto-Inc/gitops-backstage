@@ -79,8 +79,8 @@ backstage:
   postgresql:
     enabled: false
 
-  # Own ServiceAccount: Backstage reads the cluster (Kubernetes tab, ArgoCD status) with the READ-ONLY
-  # ClusterRole in platform/backstage-k8s-readonly.yaml (applied once by an admin). No secrets access.
+  # Own ServiceAccount: Backstage reads tenant namespaces (Kubernetes tab) and ArgoCD apps (status), READ-ONLY.
+  # Rights: platform/backstage-k8s-readonly.yaml (admin, once) + a RoleBinding per tenant namespace. No secrets.
   serviceAccount:
     create: true
     name: backstage
