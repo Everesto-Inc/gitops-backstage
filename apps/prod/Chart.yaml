@@ -2,7 +2,7 @@
 # ArgoCD points at this folder (path apps/prod) and runs `helm dependency build` itself.
 # A future "dev" environment = copy this folder to apps/dev and change values.yaml.
 apiVersion: v2
-name: backstage-prod
+name: prod-backstage
 description: Backstage developer portal — prod (https://backstage.everesto.live)
 type: application
 version: 0.1.0

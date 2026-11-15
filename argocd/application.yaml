@@ -1,3 +1,4 @@
+# Naming: <env>-<app> = same as its namespace (prod-backstage).
 # Apply ONCE, AFTER argocd/appproject.yaml (then ArgoCD manages everything from git):
 #   kubectl apply -n argocd -f argocd/application.yaml
 # Or in the ArgoCD UI: project backstage · repo this repo · revision main · path apps/prod ·
@@ -5,7 +6,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: backstage-prod
+  name: prod-backstage
   namespace: argocd
 spec:
   project: backstage            # argocd/appproject.yaml — only namespace prod-backstage, only these repos

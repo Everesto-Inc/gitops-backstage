@@ -5,7 +5,7 @@ What ArgoCD deploys for Backstage (developer portal) — https://backstage.evere
 ```
 backstage-app (code) ──CI──▶ ghcr.io/everesto-inc/backstage:sha-xxxxxxx ──bumps tag──▶ apps/prod/values.yaml (here)
                                                                                     │
-ArgoCD app "backstage-prod" (path apps/prod) ◀──────────────────────────────────────┘
+ArgoCD app "prod-backstage" (path apps/prod) ◀──────────────────────────────────────┘
   apps/prod = wrapper Helm chart:
   ├─ dependency: official chart backstage 2.10.2 + values.yaml  → Deployment + Service (NodePort 30700)
   └─ templates/external-secret.yaml                             → secret "backstage-secrets" from Infisical
@@ -27,7 +27,7 @@ change `values.yaml`, add an Application `backstage-dev` → namespace `dev-back
 | `apps/prod/templates/external-secret.yaml` | ESO: copies 11 keys from Infisical into `backstage-secrets` |
 | `platform/cluster-secret-store.yaml` | ClusterSecretStore `infisical-backstage`, usable only by ns `prod-backstage` — applied once by hand |
 | `argocd/appproject.yaml` | ArgoCD project `backstage`: only namespace `prod-backstage`, only this repo + the chart — applied once by hand |
-| `argocd/application.yaml` | ArgoCD Application `backstage-prod` (path `apps/prod`) — applied once by hand |
+| `argocd/application.yaml` | ArgoCD Application `prod-backstage` (path `apps/prod`) — applied once by hand |
 
 ## This repo is public — rules
 - **No secret values, ever.** Passwords, client secrets, the database host → **Infisical**.
