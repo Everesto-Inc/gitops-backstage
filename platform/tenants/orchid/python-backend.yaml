@@ -31,7 +31,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: python-backend-dev
+  name: dev-python-backend
   namespace: argocd
   labels: { everesto.live/project: orchid, everesto.live/env: dev }
   finalizers: [resources-finalizer.argocd.argoproj.io]   # deleting the app removes its pods too
