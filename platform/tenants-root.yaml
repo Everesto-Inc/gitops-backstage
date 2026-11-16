@@ -1,0 +1,22 @@
+# Platform-managed ROOT app (app-of-apps). Apply ONCE, ever:
+#   sudo kubectl apply -n argocd -f platform/tenants-root.yaml
+#
+# Watches platform/tenants/ — Backstage writes one file per app there on Create deployment / first Promote
+# (ESO login ExternalSecret, ClusterSecretStores, Applications <app>-dev / -prod, the space's AppProject) and
+# removes it on Delete. ArgoCD creates / deletes those objects by itself → no kubectl per app.
+# Backstage still has NO cluster access: it only writes git.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-tenants
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Everesto-Inc/gitops-backstage.git
+    targetRevision: main
+    path: platform/tenants
+    directory: { recurse: true }
+  destination: { server: https://kubernetes.default.svc, namespace: argocd }
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }   # file removed by "Delete deployment" → objects removed
