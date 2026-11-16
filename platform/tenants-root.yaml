@@ -11,7 +11,7 @@ metadata:
   name: platform-tenants
   namespace: argocd
 spec:
-  project: default
+  project: platform                     # fenced: platform/appproject-platform.yaml
   source:
     repoURL: https://github.com/Everesto-Inc/gitops-backstage.git
     targetRevision: main

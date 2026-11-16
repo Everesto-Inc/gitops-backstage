@@ -10,7 +10,7 @@ metadata:
   name: platform-ingress
   namespace: argocd
 spec:
-  project: default                      # cluster-wide objects (IngressClass, ClusterRole) → platform, admin-applied
+  project: platform                     # fenced: platform/appproject-platform.yaml
   source:
     repoURL: https://traefik.github.io/charts
     chart: traefik

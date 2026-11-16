@@ -1,0 +1,30 @@
+# ArgoCD project "platform" — the fence for the platform's own apps (instead of ArgoCD's unfenced "default").
+# Apply ONCE:  sudo kubectl apply -n argocd -f platform/appproject-platform.yaml
+#
+#   platform-argocd-config  ArgoCD settings (ConfigMaps + ExternalSecret in ns argocd)
+#   platform-tenants        app-of-apps: Applications / AppProjects (ns argocd), ESO logins (ns external-secrets),
+#                           ClusterSecretStores (cluster-wide)
+#   platform-ingress        in-cluster Traefik (ns platform-ingress + IngressClass / ClusterRole)
+# Only these repos, only these namespaces, only these cluster-wide kinds. Admins only (role:admin).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: Platform apps (ArgoCD config, tenants root, ingress) — admins only
+  sourceRepos:
+    - https://github.com/Everesto-Inc/gitops-backstage.git
+    - https://traefik.github.io/charts
+  destinations:
+    - { server: https://kubernetes.default.svc, namespace: argocd }
+    - { server: https://kubernetes.default.svc, namespace: external-secrets }
+    - { server: https://kubernetes.default.svc, namespace: platform-ingress }
+  clusterResourceWhitelist:
+    - { group: external-secrets.io, kind: ClusterSecretStore }
+    - { group: networking.k8s.io, kind: IngressClass }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRole }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRoleBinding }
+    - { group: '', kind: Namespace }
+  namespaceResourceWhitelist:
+    - { group: '*', kind: '*' }   # still limited to the 3 namespaces above
