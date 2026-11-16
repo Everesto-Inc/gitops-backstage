@@ -6,7 +6,7 @@ backstage:
     image:
       registry: ghcr.io
       repository: everesto-inc/backstage
-      tag: "sha-6d44cd4"
+      tag: "sha-7eaff73"
       pullPolicy: IfNotPresent
       # image is PUBLIC on ghcr.io → no pull secret needed
 
