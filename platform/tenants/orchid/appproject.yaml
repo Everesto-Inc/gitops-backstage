@@ -8,9 +8,9 @@ spec:
   description: DevOps space orchid
   sourceRepos:
     - https://github.com/Everesto-Inc/*-gitops.git
-  destinations:
-    - { server: https://kubernetes.default.svc, namespace: dev-orchid }
-    - { server: https://kubernetes.default.svc, namespace: prod-orchid }
+  destinations:   # exactly the namespaces of this space's apps (dev-<key> / prod-<key>)
+    - { server: https://kubernetes.default.svc, namespace: dev-python }
+    - { server: https://kubernetes.default.svc, namespace: prod-python }
   clusterResourceWhitelist:
     - { group: '', kind: Namespace }
   namespaceResourceWhitelist:

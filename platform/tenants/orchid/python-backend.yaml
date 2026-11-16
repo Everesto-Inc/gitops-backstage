@@ -19,7 +19,7 @@ metadata:
   name: infisical-python-backend-dev
 spec:
   conditions:
-    - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: dev-orchid } }
+    - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: dev-python } }
   provider:
     infisical:
       hostAPI: https://infisical.everesto.live
@@ -42,7 +42,7 @@ spec:
     repoURL: https://github.com/Everesto-Inc/python-backend-gitops.git
     targetRevision: main
     path: apps/dev
-  destination: { server: https://kubernetes.default.svc, namespace: dev-orchid }
+  destination: { server: https://kubernetes.default.svc, namespace: dev-python }
   syncPolicy:
     # MANUAL sync: after "Deploy" / "Promote" click Sync in ArgoCD
     syncOptions: [CreateNamespace=true]
