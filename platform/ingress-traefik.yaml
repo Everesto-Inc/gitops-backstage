@@ -1,0 +1,43 @@
+# Platform-managed: the in-cluster ingress controller for GitOps apps (dev).
+# Apply ONCE by hand:  sudo kubectl apply -n argocd -f platform/ingress-traefik.yaml   (then ArgoCD keeps it in sync)
+#
+#   Internet → alb Traefik (TLS *.dev.everesto.live, conf.d/k3s-ingress-dev.yml) → NodePort 30080 on the K3s nodes
+#            → THIS Traefik (plain HTTP inside) → each app's ingress.yaml (host <app>.dev.everesto.live)
+# K3s' own Traefik stays disabled (00_bootstrap_k3s_awx.yml); this one is pinned and managed by ArgoCD.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-ingress
+  namespace: argocd
+spec:
+  project: default                      # cluster-wide objects (IngressClass, ClusterRole) → platform, admin-applied
+  source:
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: 42.1.3              # pinned (released 2026-10-22)
+    helm:
+      releaseName: ingress
+      valuesObject:
+        deployment: { replicas: 1 }
+        nodeSelector: { everesto.live/pool: tenants }
+        resources:
+          requests: { cpu: 25m, memory: 64Mi }
+          limits: { memory: 160Mi }
+        ingressClass: { enabled: true, isDefaultClass: true, name: traefik }
+        providers:
+          kubernetesIngress: { enabled: true }
+          kubernetesCRD: { enabled: false }   # only standard Ingress objects
+        service: { type: NodePort }
+        ports:
+          web:
+            nodePort: 30080
+            forwardedHeaders:
+              trustedIPs: ["10.0.1.153/32"]   # alb: keep its X-Forwarded-Proto/For (TLS ends on alb)
+          websecure: { expose: { default: false } }
+        logs: { access: { enabled: false } }
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: platform-ingress
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
