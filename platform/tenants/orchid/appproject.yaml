@@ -9,8 +9,8 @@ spec:
   sourceRepos:
     - https://github.com/Everesto-Inc/*-gitops.git
   destinations:
-    - { server: https://kubernetes.default.svc, namespace: orchid-dev }
-    - { server: https://kubernetes.default.svc, namespace: orchid-prod }
+    - { server: https://kubernetes.default.svc, namespace: dev-orchid }
+    - { server: https://kubernetes.default.svc, namespace: prod-orchid }
   clusterResourceWhitelist:
     - { group: '', kind: Namespace }
   namespaceResourceWhitelist:
