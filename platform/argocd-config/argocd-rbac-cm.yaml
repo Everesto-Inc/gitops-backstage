@@ -14,7 +14,8 @@ data:
 
     # DevOps Space orchid
     p, role:orchid-developer, applications, get, orchid/*, allow
-    p, role:orchid-developer, applications, sync, orchid/*, allow
+    p, role:orchid-developer, applications, sync, orchid/dev-*, allow
+    p, role:orchid-manager, applications, sync, orchid/*, allow
     p, role:orchid-developer, logs, get, orchid/*, allow
     p, role:orchid-developer, projects, get, orchid, allow
     p, role:orchid-maintainer, applications, delete, orchid/*, allow
