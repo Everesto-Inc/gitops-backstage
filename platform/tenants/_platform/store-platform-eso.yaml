@@ -1,0 +1,16 @@
+# ESO reads the per-app logins from Infisical project platform-eso — only into namespace external-secrets.
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: infisical-platform-eso
+spec:
+  conditions:
+    - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: external-secrets } }
+  provider:
+    infisical:
+      hostAPI: https://infisical.everesto.live
+      auth:
+        universalAuthCredentials:
+          clientId: { name: infisical-backstage-auth, namespace: external-secrets, key: clientId }
+          clientSecret: { name: infisical-backstage-auth, namespace: external-secrets, key: clientSecret }
+      secretsScope: { projectSlug: platform-eso, environmentSlug: prod, secretsPath: / }
