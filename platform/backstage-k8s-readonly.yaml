@@ -7,6 +7,8 @@
 #    synced by ArgoCD) → Backstage reads pods/logs/events ONLY in tenant namespaces (orchid-dev, …),
 #    never in kube-system, argocd, external-secrets, awx, monitoring, prod-backstage.
 #  - Role backstage-argocd-read in ns argocd: read ArgoCD Applications (Sync/Health on CD cards).
+#  - ESO status for the status chain in Backstage (CD tab): ClusterSecretStores (cluster-wide, get only) and the
+#    per-app login ExternalSecrets in ns external-secrets (get only). Status/conditions only — no secret values.
 #  - No Secrets, no ConfigMaps, no writes, no exec.
 # Revoke everything:  sudo kubectl delete -f platform/backstage-k8s-readonly.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -23,6 +25,10 @@ rules:
   - apiGroups: [batch]
     resources: [jobs, cronjobs]
     verbs: [get, list, watch]
+  # status of the app's ExternalSecret (names + Ready condition — an ExternalSecret holds no secret values)
+  - apiGroups: [external-secrets.io]
+    resources: [externalsecrets]
+    verbs: [get, list]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -43,6 +49,54 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: backstage-argocd-read
+subjects:
+  - kind: ServiceAccount
+    name: backstage
+    namespace: prod-backstage
+---
+# ESO status: is the app's secret source valid? (ClusterSecretStore = provider settings + REFERENCES, no values)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backstage-read-secretstores
+rules:
+  - apiGroups: [external-secrets.io]
+    resources: [clustersecretstores]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: backstage-read-secretstores
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: backstage-read-secretstores
+subjects:
+  - kind: ServiceAccount
+    name: backstage
+    namespace: prod-backstage
+---
+# ESO status: does the cluster have the app's Infisical login? (ExternalSecret infisical-<app>-auth — no values)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backstage-eso-status
+  namespace: external-secrets
+rules:
+  - apiGroups: [external-secrets.io]
+    resources: [externalsecrets]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backstage-eso-status
+  namespace: external-secrets
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: backstage-eso-status
 subjects:
   - kind: ServiceAccount
     name: backstage
