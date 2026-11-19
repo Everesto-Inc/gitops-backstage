@@ -13,6 +13,69 @@ spec:
     - { secretKey: clientId, remoteRef: { key: PYTHON_BACKEND_CLIENT_ID } }
     - { secretKey: clientSecret, remoteRef: { key: PYTHON_BACKEND_CLIENT_SECRET } }
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dev-python
+  labels:
+    everesto.live/tenant: "true"          # NetworkPolicies of OTHER tenants deny traffic from here
+    everesto.live/project: orchid
+    everesto.live/env: dev
+    pod-security.kubernetes.io/enforce: baseline   # no privileged / hostPath / hostNetwork pods
+    pod-security.kubernetes.io/warn: restricted
+  annotations:
+    # never deleted by ArgoCD (safety): remove it by hand after Delete deployment if it is empty
+    argocd.argoproj.io/sync-options: Delete=false
+---
+# Budget of dev-python: memory = app × (replicas + 1) + 128 Mi (max 1536 Mi). No NodePort / LoadBalancer / volumes.
+apiVersion: v1
+kind: ResourceQuota
+metadata: { name: tenant-quota, namespace: dev-python }
+spec:
+  hard:
+    requests.memory: 512Mi
+    limits.memory: 512Mi
+    requests.cpu: "1"
+    pods: "6"
+    services: "5"
+    services.nodeports: "0"
+    services.loadbalancers: "0"
+    persistentvolumeclaims: "0"
+---
+# Defaults for containers that set no resources (else the quota would reject them)
+apiVersion: v1
+kind: LimitRange
+metadata: { name: tenant-defaults, namespace: dev-python }
+spec:
+  limits:
+    - type: Container
+      default: { memory: 256Mi }
+      defaultRequest: { memory: 64Mi, cpu: 25m }
+      max: { memory: 1024Mi }
+---
+# Isolation: pods here accept traffic only from this namespace and from PLATFORM namespaces (ingress, monitoring) —
+# never from another tenant (every tenant namespace carries everesto.live/tenant=true).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: tenant-isolation, namespace: dev-python }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchExpressions: [{ key: everesto.live/tenant, operator: DoesNotExist }]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: dev-python
+  name: backstage-read-python-backend
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: backstage-read }
+subjects:
+  - { kind: ServiceAccount, name: backstage, namespace: prod-backstage }
+---
 apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:

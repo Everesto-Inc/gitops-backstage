@@ -11,7 +11,14 @@ spec:
   destinations:   # exactly the namespaces of this space's apps (dev-<key> / prod-<key>)
     - { server: https://kubernetes.default.svc, namespace: dev-python }
     - { server: https://kubernetes.default.svc, namespace: prod-python }
-  clusterResourceWhitelist:
-    - { group: '', kind: Namespace }
-  namespaceResourceWhitelist:
-    - { group: '*', kind: '*' }
+  clusterResourceWhitelist: []   # nothing cluster-wide (the namespace comes from the platform)
+  namespaceResourceWhitelist:     # app objects only — no RBAC, NetworkPolicy, quota, Secret, SecretStore
+    - { group: 'apps', kind: Deployment }
+    - { group: '', kind: Service }
+    - { group: '', kind: ConfigMap }
+    - { group: 'networking.k8s.io', kind: Ingress }
+    - { group: 'external-secrets.io', kind: ExternalSecret }
+    - { group: 'batch', kind: CronJob }
+    - { group: 'batch', kind: Job }
+    - { group: 'autoscaling', kind: HorizontalPodAutoscaler }
+    - { group: 'policy', kind: PodDisruptionBudget }

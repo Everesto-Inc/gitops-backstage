@@ -5,6 +5,7 @@
 #   platform-tenants        app-of-apps: Applications / AppProjects (ns argocd), ESO logins (ns external-secrets),
 #                           ClusterSecretStores (cluster-wide)
 #   platform-ingress        in-cluster Traefik (ns platform-ingress + IngressClass / ClusterRole)
+#   (tenants)               guardrails of every app namespace dev-* / prod-*: Namespace, quota, limits, network policy
 # Only these repos, only these namespaces, only these cluster-wide kinds. Admins only (role:admin).
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -20,6 +21,9 @@ spec:
     - { server: https://kubernetes.default.svc, namespace: argocd }
     - { server: https://kubernetes.default.svc, namespace: external-secrets }
     - { server: https://kubernetes.default.svc, namespace: platform-ingress }
+    # tenant app namespaces: the platform owns Namespace, ResourceQuota, LimitRange, NetworkPolicy, read RoleBinding
+    - { server: https://kubernetes.default.svc, namespace: 'dev-*' }
+    - { server: https://kubernetes.default.svc, namespace: 'prod-*' }
   clusterResourceWhitelist:
     - { group: external-secrets.io, kind: ClusterSecretStore }
     - { group: networking.k8s.io, kind: IngressClass }
@@ -27,4 +31,4 @@ spec:
     - { group: rbac.authorization.k8s.io, kind: ClusterRoleBinding }
     - { group: '', kind: Namespace }
   namespaceResourceWhitelist:
-    - { group: '*', kind: '*' }   # still limited to the 3 namespaces above
+    - { group: '*', kind: '*' }   # still limited to the namespaces above
