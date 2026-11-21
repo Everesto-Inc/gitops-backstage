@@ -34,7 +34,6 @@ spec:
             forwardedHeaders:
               trustedIPs: ["10.0.1.153/32"]   # alb: keep its X-Forwarded-Proto/For (TLS ends on alb)
           websecure: { expose: { default: false } }
-        logs: { access: { enabled: false } }
   destination:
     server: https://kubernetes.default.svc
     namespace: platform-ingress
