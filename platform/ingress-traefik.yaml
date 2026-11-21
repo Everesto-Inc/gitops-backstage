@@ -1,8 +1,8 @@
 # Platform-managed: the in-cluster ingress controller for GitOps apps (dev).
 # Apply ONCE by hand:  sudo kubectl apply -n argocd -f platform/ingress-traefik.yaml   (then ArgoCD keeps it in sync)
 #
-#   Internet → alb Traefik (TLS *.dev.everesto.live, conf.d/k3s-ingress-dev.yml) → NodePort 30080 on the K3s nodes
-#            → THIS Traefik (plain HTTP inside) → each app's ingress.yaml (host <app>.dev.everesto.live)
+#   Internet → alb Traefik (TLS *.everesto.live, conf.d/k3s-ingress-dev.yml) → NodePort 30080 on the K3s nodes
+#            → THIS Traefik (plain HTTP inside) → each app's ingress.yaml (host <app>-dev.everesto.live)
 # K3s' own Traefik stays disabled (00_bootstrap_k3s_awx.yml); this one is pinned and managed by ArgoCD.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
