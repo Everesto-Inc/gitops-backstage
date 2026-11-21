@@ -17,6 +17,9 @@ spec:
     targetRevision: 42.1.3              # pinned (released 2026-10-22)
     helm:
       releaseName: ingress
+      # The chart ships ~25 Traefik CRDs (IngressRoute, Hub…). Not needed: only standard Ingress objects
+      # are used (kubernetesCRD provider off). CRDs are cluster-wide → project "platform" forbids them on purpose.
+      skipCrds: true
       valuesObject:
         deployment: { replicas: 1 }
         nodeSelector: { everesto.live/pool: tenants }
