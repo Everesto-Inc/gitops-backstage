@@ -9,8 +9,7 @@ spec:
   sourceRepos:
     - https://github.com/Everesto-Inc/*-gitops.git
   destinations:   # exactly the namespaces of this space's apps (dev-<key> / prod-<key>)
-    - { server: https://kubernetes.default.svc, namespace: dev-python }
-    - { server: https://kubernetes.default.svc, namespace: prod-python }
+    - { server: https://kubernetes.default.svc, namespace: dev-agency }
   clusterResourceWhitelist: []   # nothing cluster-wide (the namespace comes from the platform)
   namespaceResourceWhitelist:     # app objects only — no RBAC, NetworkPolicy, quota, Secret, SecretStore
     - { group: 'apps', kind: Deployment }
